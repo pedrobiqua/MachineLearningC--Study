@@ -16,6 +16,7 @@ void fill_values(std::index_sequence<Idx...>, T& row, std::vector<double>& data)
 
 int main()
 {
+    // Obs: Usando dataset do iris: https://archive.ics.uci.edu/ml/datasets/iris
     // Preprocessamento dos dados que vão ser aprendidos.
     const string file_path = "iris.csv";
     const string file_path_fix = "iris_fix.csv";
@@ -36,6 +37,8 @@ int main()
 
     using RowType = tuple<double, double, double, double, string>;
     RowType row;
+
+    // TODO: Selecionar uma biblioteca para fazer o treinamento desse dataset
 
     try {
         bool done = false;
