@@ -4,6 +4,9 @@
 #include <fstream>
 #include <regex>
 #include <libfccp/csv.h>
+#include <shark/Data/Dataset.h>
+#include <shark/Data/Csv.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace io;
@@ -16,12 +19,15 @@ void fill_values(std::index_sequence<Idx...>, T& row, std::vector<double>& data)
 
 int main()
 {
+    // Path do arquivo dos dados usados como teste
+    const string file_path = "datasets/iris.csv";
+    const string file_path_fix = "datasets/iris_fix.csv";
+
     // Obs: Usando dataset do iris: https://archive.ics.uci.edu/ml/datasets/iris
     // Preprocessamento dos dados que vão ser aprendidos.
-    const string file_path = "iris.csv";
-    const string file_path_fix = "iris_fix.csv";
     std::ifstream data_stream(file_path);
     std::string data_string((std::istreambuf_iterator<char>(data_stream)), std::istreambuf_iterator<char>());
+    
     /*
     Padrão usado para substituir as strings por números
     Iris-setosa -> 1
@@ -44,8 +50,6 @@ int main()
     using RowType = tuple<double, double, double, double, string>;
     RowType row;
 
-    // TODO: Selecionar uma biblioteca para fazer o treinamento desse dataset
-
     try {
         bool done = false;
         while (!done) {
@@ -62,6 +66,24 @@ int main()
         // ignore badly formatted samples
         std::cerr << err.what() << std::endl;
     }
+
+    // Usando a biblioteca shark para ler o arquivo
+    shark::ClassificationDataset dataset;
+    try {
+        shark::importCSV(dataset, file_path_fix, shark::LAST_COLUMN);
+    } catch (shark::Exception& e) {
+        std::cerr << "Erro ao importar arquivo CSV: " << e.what() << std::endl;
+    }
+
+    std::size_t classes = numberOfClasses(dataset);
+    std::cout << "Number of classes " << classes << std::endl;
+    std::vector<std::size_t> sizes = classSizes(dataset);
+    std::cout << "Class size: " << std::endl;
+    for (auto cs : sizes) {
+        std::cout << cs << std::endl;
+    }
+    std::size_t dim = inputDimension(dataset);
+    std::cout << "Input dimension " << dim << std::endl;
 }
 
 /*
