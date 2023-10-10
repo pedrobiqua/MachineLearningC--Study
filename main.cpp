@@ -7,6 +7,11 @@
 #include <shark/Data/Dataset.h>
 #include <shark/Data/Csv.h>
 #include <boost/algorithm/string.hpp>
+#include <shark/Data/DataView.h>
+#include <shark/Models/NearestNeighborModel.h>
+#include <shark/Models/Clustering/Centroids.h>
+#include <shark/Models/Clustering/HardClusteringModel.h>
+#include <shark/Algorithms/KMeans.h>
 
 using namespace std;
 using namespace io;
@@ -17,7 +22,7 @@ bool read_row_help(std::index_sequence<Idx...>, T& row, R& r);
 template <std::size_t... Idx, typename T>
 void fill_values(std::index_sequence<Idx...>, T& row, std::vector<double>& data);
 
-int main()
+int main(int argc, char **argv)
 {
     // Path do arquivo dos dados usados como teste
     const string file_path = "datasets/iris.csv";
@@ -70,20 +75,34 @@ int main()
     // Usando a biblioteca shark para ler o arquivo
     shark::ClassificationDataset dataset;
     try {
-        shark::importCSV(dataset, file_path_fix, shark::LAST_COLUMN);
+        shark::importCSV(dataset, file_path_fix, shark::LAST_COLUMN, ',');
     } catch (shark::Exception& e) {
         std::cerr << "Erro ao importar arquivo CSV: " << e.what() << std::endl;
     }
 
+    std::cout << "Informações da base:\n";
     std::size_t classes = numberOfClasses(dataset);
-    std::cout << "Number of classes " << classes << std::endl;
+    std::cout << "\tNumber of classes " << classes << std::endl;
     std::vector<std::size_t> sizes = classSizes(dataset);
-    std::cout << "Class size: " << std::endl;
+    std::cout << "\tClass size: " << std::endl;
     for (auto cs : sizes) {
-        std::cout << cs << std::endl;
+        std::cout << "\t" << cs << std::endl;
     }
     std::size_t dim = inputDimension(dataset);
-    std::cout << "Input dimension " << dim << std::endl;
+    std::cout << "\tInput dimension " << dim << "\n" << std::endl;
+
+    shark::UnlabeledData<shark::RealVector> features;
+    int num_clusters = 2;
+    shark::Centroids centroids;
+    shark::kMeans(features, num_clusters, centroids);
+
+    shark::HardClusteringModel<shark::RealVector> model(&centroids);
+    shark::Data<unsigned> clusters = model(features);
+    for (std::size_t i = 0; i != features.numberOfElements(); i++) {
+        auto cluster_idx = clusters.element(i);
+        auto element = features.element(i);
+    }
+
 }
 
 /*
